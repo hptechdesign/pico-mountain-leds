@@ -1,7 +1,12 @@
 {
-    "cmake.configureSettings": {
-        "PICO_SDK_PATH": "../../pico-sdk" // <-- Set this if you've not set ${env:PICO_SDK_PATH}
-    },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "C_Cpp.default.compilerPath": "c:/vsarm/armcc/12.2 mpacbti-rel1/bin/arm-none-eabi-g++.exe",
+    "cmake.configureArgs": [
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+    ],
+    "cmake.configureSettings": {
+        "PICO_SDK_PATH": "C:/Users/huwrp/repos/pico-sdk",
+        "PIMORONI_LIB_PATH": "C:/Users/huwrp/repos/pimoroni-pico"
+    },
+    "cmake.generator": "Ninja"
 }
