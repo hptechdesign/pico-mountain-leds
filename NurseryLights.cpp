@@ -20,14 +20,14 @@ using namespace pimoroni;
 using namespace plasma;
 
 // Set how many LEDs you have
-const uint NUM_LEDS = 50;
+const uint NUM_LEDS = 60;
 
 // Pick two hues from the colour wheel (from 0-360°, try https://www.cssscript.com/demo/hsv-hsl-color-wheel-picker-reinvented/ )
-constexpr float HUE_1 = 40.0f;
-constexpr float HUE_2 = 285.0f;
+constexpr float HUE_1 = 145.0f;
+constexpr float HUE_2 = 230.0f;
 
 // Set up brightness (between 0 and 1)
-constexpr float BRIGHTNESS = 0.5f;
+constexpr float BRIGHTNESS = 0.2f;
 
 // Set up speed (wait time between colour changes, in seconds)
 constexpr float SPEED = 1.0f;
