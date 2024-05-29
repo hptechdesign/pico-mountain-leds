@@ -52,24 +52,28 @@ int main() {
     // Start updating the LED strip
     led_strip.start();
 
-    char input[9];  // Buffer for the incoming hex color (8 chars + null terminator)
+    char input[11];  // Buffer for the incoming hex color (8 chars + null terminator)
 
     while (true) {
-        // Check if there's data available on the serial port
+        // Read data from serial port
         if (fgets(input, sizeof(input), stdin) != NULL) {
-            // Remove newline character if present
-            char* newline = strchr(input, '\n');
-            if (newline) {
-                *newline = '\0';
-            }
+          // Check for successful read and newline character
+          if (feof(stdin)) {
+            // Handle end-of-file condition (optional)
+            break;
+          }
 
-            // Parse the hex color value
-            uint32_t color = parse_hex_color(input);
-            set_leds(color);
+          // Remove newline character if present
+          char* newline = strchr(input, '\n');
+          if (newline) {
+            *newline = '\0';
+          }
 
-            printf("Set color to #%08X\n", color);
+          // Parse the hex color value
+          uint32_t color = parse_hex_color(input);
+          set_leds(color);
+
+          printf("Set color to #%08X\n", color);
         }
-        
-        sleep_ms(SPEED * 1000.0f);
-    }
+}
 }
