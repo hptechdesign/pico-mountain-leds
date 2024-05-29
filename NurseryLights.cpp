@@ -22,18 +22,11 @@ using namespace plasma;
 // Set how many LEDs you have
 const uint NUM_LEDS = 60;
 
-// Pick two hues from the colour wheel (from 0-360°, try https://www.cssscript.com/demo/hsv-hsl-color-wheel-picker-reinvented/ )
-constexpr float HUE_1 = 145.0f;
-constexpr float HUE_2 = 230.0f;
-
-// Set up brightness (between 0 and 1)
-constexpr float BRIGHTNESS = 0.2f;
-
 // Set up speed (wait time between colour changes, in seconds)
-constexpr float SPEED = 1.0f;
+constexpr float SPEED = 0.01f;
 
 // Set up the WS2812 / NeoPixel™ LEDs, with RGB color order to work with the LED wire that comes with Skully
-WS2812 led_strip(NUM_LEDS, pio0, 0, plasma_stick::DAT, WS2812::DEFAULT_SERIAL_FREQ, false, WS2812::COLOR_ORDER::RGB);
+WS2812 led_strip(NUM_LEDS, pio0, 0, plasma_stick::DAT, WS2812::DEFAULT_SERIAL_FREQ, true, WS2812::COLOR_ORDER::GRB);
 
 int main() {
     stdio_init_all();
@@ -41,28 +34,19 @@ int main() {
  // Start updating the LED strip
   led_strip.start();
 
+  uint8_t rVal = 160;
+  uint8_t bVal = 0;
+  uint8_t gVal = 128;
+  uint8_t BRIGHTNESS = 64;
+
   while(true) {
 
     for(auto i = 0u; i < NUM_LEDS; i++) {
-        // the if statements below use a modulo operation to identify the even and odd numbered LEDs
-        if((i % 2) == 0)
-            led_strip.set_hsv(i, HUE_1 / 360, 1.0, BRIGHTNESS);
-        else
-            led_strip.set_hsv(i, HUE_2 / 360, 1.0, BRIGHTNESS);
+            led_strip.set_rgb(i, rVal, gVal, bVal, BRIGHTNESS, true);
     }
-    sleep_ms(SPEED * 1000.0f);
-
-    for(auto i = 0u; i < NUM_LEDS; i++) {
-        if((i % 2) == 0)
-            led_strip.set_hsv(i, HUE_2 / 360, 1.0, BRIGHTNESS);
-        else
-            led_strip.set_hsv(i, HUE_1 / 360, 1.0, BRIGHTNESS);
-    }
+    printf("Hello, world!\n");
+    printf("\nR = %d, G = %d, B = %d", rVal++, gVal++, bVal++);
+    printf("\n Brightness = %d", BRIGHTNESS);
     sleep_ms(SPEED * 1000.0f);
   }
-
-    while (true) {
-        printf("Hello, world!\n");
-        sleep_ms(1000);
-    }
 }
