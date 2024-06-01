@@ -4,6 +4,7 @@
             "name": "Win32",
             "includePath": [
                 "${env:PICO_SDK_PATH}/**",
+                "${env:PIMORONI_LIB_PATH}/**",
                 "C:\\VSARM\\sdk\\pico\\pico-sdk\\",
                 "C:\\VSARM\\sdk\\pico\\pico-sdk\\lib\\tinyusb\\hw\\mcu\\sony\\cxd56\\spresense-exported-sdk\\nuttx\\include\\"
             ],
