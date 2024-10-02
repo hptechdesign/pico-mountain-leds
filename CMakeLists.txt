@@ -53,7 +53,9 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 add_executable(${PROJECT_NAME}
-   ${PROJECT_NAME}.cpp
+   main.cpp
+   command_parser.cpp
+   led_controller.cpp
    )
 
 
