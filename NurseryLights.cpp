@@ -1,211 +1,134 @@
-/**
- * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
 #include <iostream>
 #include <cstdio>
 #include <cstring>
-#include <cstdlib>
 #include "pico/stdlib.h"
 #include "plasma_stick.hpp"
 #include "common/pimoroni_common.hpp"
 
-/*
-This example sets up two alternating colours, great for festive lights, and updates them via serial input.
-*/
-
 using namespace pimoroni;
 using namespace plasma;
 
-// Forward declarations of the LED control functions
-void sunrise(int duration, int start_percent);
-void sunset(int duration, int start_percent);
-void on(float percent);
-void off();
-
-// Set how many LEDs you have
-const uint NUM_LEDS = 60; // 5m strip = 300; 1m strip = 60
-
-// Set up speed (wait time between colour changes, in seconds)
-constexpr float SPEED = 0.01f;
-
-// Set up the WS2812 / NeoPixel™ LEDs, with RGB color order to work with the LED wire that comes with Skully
-WS2812 led_strip(NUM_LEDS, pio0, 0, plasma_stick::DAT, WS2812::DEFAULT_SERIAL_FREQ, true, WS2812::COLOR_ORDER::GRB);
-
-bool parse_int(const char *str, int &value)
+// Class to handle LED strip operations
+class LEDController
 {
-  char *endptr;
-  value = strtol(str, &endptr, 10);
+private:
+  WS2812 led_strip;
+  uint num_leds;
 
-  // Return true if strtol successfully parsed the integer
-  return true;
-}
-
-bool parse_float(const char *str, float &value)
-{
-  char *endptr;
-  value = strtof(str, &endptr);
-
-  // Return true if strtof successfully parsed the float
-  return true;
-}
-
-void set_leds(uint32_t color)
-{
-  uint8_t r = (color >> 24) & 0xFF;
-  uint8_t g = (color >> 16) & 0xFF;
-  uint8_t b = (color >> 8) & 0xFF;
-  uint8_t w = color & 0xFF;
-
-  for (auto i = 0u; i < NUM_LEDS; i++)
+public:
+  // Constructor
+  LEDController(uint num_leds, PIO pio = pio0, int sm = 0)
+      : led_strip(num_leds, pio, sm, plasma_stick::DAT, WS2812::DEFAULT_SERIAL_FREQ, true, WS2812::COLOR_ORDER::GRB), num_leds(num_leds)
   {
-    led_strip.set_rgb(i, r, g, b, w, true);
+    led_strip.start();
   }
-}
 
-uint32_t parse_hex_color(const char *hex_str)
-{
-  // Check if the string starts with "0x" or "0X"
-  if (hex_str[0] == '0' && (hex_str[1] == 'x' || hex_str[1] == 'X'))
+  // Function to set all LEDs to a specific color
+  void set_all_leds(uint8_t r, uint8_t g, uint8_t b)
   {
-    hex_str += 2; // Skip the "0x" prefix
+    for (uint i = 0; i < num_leds; ++i)
+    {
+      led_strip.set_rgb(i, r, g, b);
+    }
   }
-  return strtoul(hex_str, NULL, 16);
-}
+
+  // Function to turn all LEDs off
+  void all_off()
+  {
+    set_all_leds(0, 0, 0);
+  }
+
+  // Function to simulate a sunrise
+  void sunrise(int duration)
+  {
+    for (int level = 0; level <= 1000; ++level) // Adjusted to 1000 levels
+    {
+      uint8_t brightness = static_cast<uint8_t>((level / 1000.0f) * 255);
+      set_all_leds(brightness, brightness / 2, 0); // Warm yellow color
+      sleep_ms(duration);                          // Adjust as needed
+    }
+  }
+
+  // Function to simulate a sunset
+  void sunset(int duration)
+  {
+    for (int level = 1000; level >= 0; --level) // Adjusted to 1000 levels
+    {
+      uint8_t brightness = static_cast<uint8_t>((level / 1000.0f) * 255);
+      set_all_leds(brightness, brightness / 2, 0); // Warm yellow color
+      sleep_ms(duration);                          // Adjust as needed
+    }
+  }
+};
 
 // Command parser and executor
-void parse_and_execute_command(const char *input)
+void parse_and_execute_command(const char *input, LEDController &led_controller)
 {
-  if (strncmp(input, "sunrise(", 8) == 0)
+  if (strncmp(input, "all_on(", 7) == 0)
   {
-    const char *params = input + 8;
-    char *comma = strchr(params, ',');
-    if (comma)
+    int r, g, b;
+    if (sscanf(input + 7, "%d,%d,%d", &r, &g, &b) == 3)
     {
-      *comma = '\0';
-      int duration, start_percent;
-      if (parse_int(params, duration) && parse_int(comma + 1, start_percent) && start_percent >= 0 && start_percent <= 100)
-      {
-        sunrise(duration, start_percent);
-        return;
-      }
+      led_controller.set_all_leds(static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b));
+    }
+  }
+  else if (strcmp(input, "all_off()") == 0)
+  {
+    led_controller.all_off();
+  }
+  else if (strncmp(input, "sunrise(", 8) == 0)
+  {
+    int duration;
+    if (sscanf(input + 8, "%d", &duration) == 1)
+    {
+      led_controller.sunrise(duration);
     }
   }
   else if (strncmp(input, "sunset(", 7) == 0)
   {
-    const char *params = input + 7;
-    char *comma = strchr(params, ',');
-    if (comma)
+    int duration;
+    if (sscanf(input + 7, "%d", &duration) == 1)
     {
-      *comma = '\0';
-      int duration, start_percent;
-      if (parse_int(params, duration) && parse_int(comma + 1, start_percent) && start_percent >= 0 && start_percent <= 100)
-      {
-        sunset(duration, start_percent);
-        return;
-      }
+      led_controller.sunset(duration);
     }
   }
-  else if (strncmp(input, "on(", 3) == 0)
+  else
   {
-    // Parse on command
-    const char *params = input + 3;
-    float percent;
-    if (parse_float(params, percent) && percent >= 0.0f && percent <= 100.0f)
-    {
-      on(percent);
-      return;
-    }
+    std::cerr << "Error: Invalid command" << std::endl;
   }
-  else if (strcmp(input, "off()") == 0)
-  {
-    off();
-    return;
-  }
-
-  // If no valid command was recognized
-  std::cerr << "Error: Invalid command" << std::endl;
-}
-
-// Function to calculate the color value based on the percentage
-uint32_t calculate_color(float percent)
-{
-  if (percent < 0.0f)
-    percent = 0.0f;
-  if (percent > 100.0f)
-    percent = 100.0f;
-
-  // Calculate the scaled values for each channel
-  int r = (int)((percent / 100.0f) * 255);
-  int g = (int)((percent / 100.0f) * 255);
-  int b = (int)((percent / 100.0f) * 255);
-  int w = (int)((percent / 100.0f) * 255);
-
-  // Construct the 32-bit color value
-  uint32_t color = (r << 24) | (g << 16) | (b << 8) | w;
-  return color;
-}
-
-// Dummy implementations of the LED control functions
-void sunrise(int duration, int start_percent)
-{
-  std::cout << "Sunrise: duration=" << duration << ", start_percent=" << start_percent << std::endl;
-}
-
-void sunset(int duration, int start_percent)
-{
-  std::cout << "Sunset: duration=" << duration << ", start_percent=" << start_percent << std::endl;
-}
-
-void on(float percent)
-{
-  std::cout << "Turn on: percent=" << percent << std::endl;
-
-  uint32_t color = calculate_color(percent);
-  set_leds(color);
-}
-
-void off()
-{
-  std::cout << "Turn off" << std::endl;
 }
 
 int main()
 {
   stdio_init_all();
 
-  // Start updating the LED strip
-  led_strip.start();
+  // Create an instance of the LEDController with the number of LEDs
+  LEDController led_controller(60); // Adjust 60 to your actual LED strip length
 
-  char input[128];      // Buffer for the incoming command
-  unsigned int pos = 0; // Position in the buffer
+  char input[128];
+  unsigned int pos = 0;
 
   while (true)
   {
-    int c = getchar(); // Read a single character from the serial port
+    int c = getchar();
     if (c != EOF)
     {
       if (c == '\n' || c == '\r')
       {
-        // Null-terminate the string and process the command
         input[pos] = '\0';
-        parse_and_execute_command(input);
-        pos = 0; // Reset position for the next command
+        parse_and_execute_command(input, led_controller);
+        pos = 0;
       }
       else if (pos < sizeof(input) - 1)
       {
-        // Add character to buffer if there is space
         input[pos++] = c;
       }
       else
       {
-        // Buffer overflow, reset position
         std::cerr << "Error: Command too long" << std::endl;
         pos = 0;
       }
     }
   }
-
   return 0;
 }
