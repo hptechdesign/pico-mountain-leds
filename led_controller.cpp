@@ -35,36 +35,51 @@ void LEDController::all_off()
 
 void LEDController::sunrise(int duration_ms)
 {
-    const int steps = 10000; // Increased steps for smoother transition
-    const float max_brightness = 255.0f;
+    const int steps = 10000; // More steps for smoother transition
+    uint8_t colors[4][3] = {
+        {0, 0, 30},    // Dark blue
+        {100, 30, 10}, // Deep orange/blue
+        {200, 80, 20}, // Orange/amber
+        {255, 180, 50} // Warm yellow
+    };
 
     for (int step = 0; step <= steps; ++step)
     {
         float progress = static_cast<float>(step) / steps;
-        float brightness = pow(progress, 1.5f) * max_brightness; // Using a power function for a more natural ramp-up
-        uint8_t red = gamma_correct(brightness);
-        uint8_t green = gamma_correct(brightness * 0.5f); // Half-brightness for green to give a warm effect
-        uint8_t blue = 0;                                 // No blue in sunrise
+        int stage = static_cast<int>(progress * 3);
+        float stage_progress = (progress * 3) - stage;
+
+        // Interpolate each RGB component
+        uint8_t red = gamma_correct(colors[stage][0] * (1 - stage_progress) + colors[stage + 1][0] * stage_progress);
+        uint8_t green = gamma_correct(colors[stage][1] * (1 - stage_progress) + colors[stage + 1][1] * stage_progress);
+        uint8_t blue = gamma_correct(colors[stage][2] * (1 - stage_progress) + colors[stage + 1][2] * stage_progress);
 
         set_all_leds(red, green, blue);
-        sleep_us((duration_ms * 1000) / steps); // Microsecond delay for smoother transition
+        sleep_us((duration_ms * 1000) / steps);
     }
 }
 
 void LEDController::sunset(int duration_ms)
 {
-    const int steps = 10000; // Increased steps for smoother transition
-    const float max_brightness = 255.0f;
+    const int steps = 10000; // More steps for smoother transition
+    uint8_t colors[4][3] = {
+        {255, 180, 50}, // Warm yellow
+        {200, 80, 20},  // Orange/amber
+        {100, 30, 10},  // Deep orange/blue
+        {0, 0, 30}      // Dark blue
+    };
 
     for (int step = steps; step >= 0; --step)
     {
         float progress = static_cast<float>(step) / steps;
-        float brightness = pow(progress, 1.5f) * max_brightness; // Using a power function for a smoother ramp-down
-        uint8_t red = gamma_correct(brightness);
-        uint8_t green = gamma_correct(brightness * 0.5f);
-        uint8_t blue = 0;
+        int stage = static_cast<int>(progress * 3);
+        float stage_progress = (progress * 3) - stage;
+
+        uint8_t red = gamma_correct(colors[stage][0] * (1 - stage_progress) + colors[stage + 1][0] * stage_progress);
+        uint8_t green = gamma_correct(colors[stage][1] * (1 - stage_progress) + colors[stage + 1][1] * stage_progress);
+        uint8_t blue = gamma_correct(colors[stage][2] * (1 - stage_progress) + colors[stage + 1][2] * stage_progress);
 
         set_all_leds(red, green, blue);
-        sleep_us((duration_ms * 1000) / steps); // Microsecond delay for smoother transition
+        sleep_us((duration_ms * 1000) / steps);
     }
 }
