@@ -19,7 +19,7 @@ bool get_switches(void)
 
 int main()
 {
-    LEDController controller(60); // Adjust the number of LEDs as needed
+    LEDController controller(300); // Adjust the number of LEDs as needed
     controller.init();
 
     CommandParser parser(controller);
