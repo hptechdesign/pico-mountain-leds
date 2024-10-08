@@ -44,26 +44,25 @@ int main()
         // Check for switch input (grounded when triggered)
         if (get_switches()) // Grounded state detected
         {
-            sleep_ms(500); // Simple debounce delay
-            if (get_switches())
-            {
-                printf("BOOTSEL_PIN state: %d\n", gpio_get(BOOTSEL_PIN));
-                printf("SWITCH_PIN state: %d\n", gpio_get(SWITCH_PIN));
-                printf("Switch triggered! Executing action...\n");
-                if (lights_on)
-                {
-                    printf("Lights on.\n");
-                    controller.sunset(1500);
-                    lights_on = false;
-                }
-                else
-                {
-                    printf("Lights off.\n");
-                    controller.sunrise(1500);
 
-                    lights_on = true;
-                }
+            printf("BOOTSEL_PIN state: %d\n", gpio_get(BOOTSEL_PIN));
+            printf("SWITCH_PIN state: %d\n", gpio_get(SWITCH_PIN));
+            printf("Switch triggered! Executing action...\n");
+            if (lights_on)
+            {
+                printf("Lights on.\n");
+                controller.sunset(1500);
+                lights_on = false;
             }
+            else
+            {
+                printf("Lights off.\n");
+                controller.sunrise(1500);
+
+                lights_on = true;
+            }
+
+            sleep_ms(500); // Simple debounce delay
         }
 
         // UART command parsing
