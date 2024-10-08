@@ -6,14 +6,15 @@ CommandParser::CommandParser(LEDController &controller) : led_controller(control
     // Register commands
     register_command("all_on", [this](const std::vector<std::string> &args)
                      {
-            if (args.size() != 3) {
-                std::cerr << "Error: all_on() expects 3 arguments (r, g, b)." << std::endl;
+            if (args.size() != 4) {
+                std::cerr << "Error: all_on() expects 4 arguments (r, g, b, w)." << std::endl;
                 return;
             }
             int r = std::stoi(args[0]);
             int g = std::stoi(args[1]);
             int b = std::stoi(args[2]);
-            led_controller.all_on(static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b)); });
+            int w = std::stoi(args[3]);
+            led_controller.all_on(static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b), static_cast<uint8_t>(w)); });
 
     register_command("all_off", [this](const std::vector<std::string> &args)
                      { led_controller.all_off(); });
